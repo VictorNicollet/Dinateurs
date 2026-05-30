@@ -6,15 +6,14 @@
   outputs = { nixpkgs, ... }:
     let
       system = "x86_64-linux";
-      hostName = "hostname";
     in
     {
-      nixosConfigurations.${hostName} = nixpkgs.lib.nixosSystem {
+      nixosConfigurations.target = nixpkgs.lib.nixosSystem {
         inherit system;
 
         modules = [
+          ./configuration.nix
           ({ pkgs, ... }: {
-            networking.hostName = hostName;
             networking.networkmanager.enable = true;
 
             services.xserver.enable = true;

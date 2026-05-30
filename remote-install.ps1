@@ -1,43 +1,58 @@
 param(
     [switch]$Deploy,
     [Parameter(Mandatory = $true, Position = 0)]
-    [string]$Host
+    [string]$Target
 )
 
 $ErrorActionPreference = "Stop"
 
 $RemoteUser = "root"
 $RemoteRepo = "/etc/nixos"
-$PatchFile = "$env:TEMP\nixos-local.patch"
+$RemoteDeployDir = "/tmp/nixos-deploy"
 
-try {
-    Write-Host "Creating patch..."
-    git diff --binary HEAD > $PatchFile
+Write-Host "Preparing target..."
 
-    Write-Host "Uploading patch..."
-    scp $PatchFile "${RemoteUser}@${Host}:/tmp/nixos-local.patch"
-
-    $Action = if ($Deploy) { "switch" } else { "test" }
-
-    Write-Host "Running nixos-rebuild $Action on $Host..."
-
-    $RemoteScript = @"
+$PrepareScript = @"
 set -euo pipefail
 
-cd $RemoteRepo
+if [ ! -f $RemoteRepo/configuration.nix ] || [ ! -f $RemoteRepo/hardware-configuration.nix ]; then
+    echo "Missing $RemoteRepo/configuration.nix or $RemoteRepo/hardware-configuration.nix on target." >&2
+    echo "Run nixos-generate-config on the target first, or provide target-specific base config files." >&2
+    exit 1
+fi
 
-git reset --hard HEAD
-git clean -fd
-
-git apply /tmp/nixos-local.patch
-
-nixos-rebuild $Action --flake .#$(hostname)
+rm -rf $RemoteDeployDir
+mkdir -p $RemoteDeployDir
+cp $RemoteRepo/configuration.nix $RemoteDeployDir/configuration.nix
+cp $RemoteRepo/hardware-configuration.nix $RemoteDeployDir/hardware-configuration.nix
 "@
+$PrepareScript = $PrepareScript -replace "`r`n", "`n"
 
-    ssh "${RemoteUser}@${Host}" $RemoteScript
+ssh "${RemoteUser}@${Target}" $PrepareScript
+if ($LASTEXITCODE -ne 0) {
+    throw "ssh prepare failed with exit code $LASTEXITCODE."
+}
 
-    Write-Host "Success."
+Write-Host "Uploading flake..."
+scp flake.nix authorized_keys "${RemoteUser}@${Target}:${RemoteDeployDir}/"
+if ($LASTEXITCODE -ne 0) {
+    throw "scp failed with exit code $LASTEXITCODE."
 }
-finally {
-    Remove-Item $PatchFile -ErrorAction SilentlyContinue
+
+$Action = if ($Deploy) { "switch" } else { "build" }
+
+Write-Host "Running nixos-rebuild $Action on $Target..."
+
+$RemoteScript = @"
+set -euo pipefail
+
+nixos-rebuild $Action --flake $RemoteDeployDir#target
+"@
+$RemoteScript = $RemoteScript -replace "`r`n", "`n"
+
+ssh "${RemoteUser}@${Target}" $RemoteScript
+if ($LASTEXITCODE -ne 0) {
+    throw "ssh failed with exit code $LASTEXITCODE."
 }
+
+Write-Host "Success."
