@@ -14,6 +14,8 @@
         modules = [
           ./configuration.nix
           ({ pkgs, ... }: {
+            nixpkgs.config.allowUnfree = true;
+
             networking.networkmanager.enable = true;
 
             services.xserver.enable = true;
@@ -22,6 +24,8 @@
 
             services.gnome.gnome-keyring.enable = true;
             security.pam.services.login.enableGnomeKeyring = true;
+
+            programs.steam.enable = true;
 
             environment.systemPackages = with pkgs; [
               bind.dnsutils
