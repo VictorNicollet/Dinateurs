@@ -34,7 +34,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "Uploading flake..."
-scp flake.nix authorized_keys "${RemoteUser}@${Target}:${RemoteDeployDir}/"
+scp flake.nix dns.nix authorized_keys "${RemoteUser}@${Target}:${RemoteDeployDir}/"
 if ($LASTEXITCODE -ne 0) {
     throw "scp failed with exit code $LASTEXITCODE."
 }
