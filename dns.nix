@@ -1,0 +1,103 @@
+{
+  services.dnsmasq = {
+    enable = true;
+    resolveLocalQueries = true;
+    settings =
+      let
+        upstream = "8.8.8.8";
+        allowedDomains = [
+          "nixos.org"
+          "google.com"
+          "wikipedia.org"
+          "wiktionary.org"
+          "fr.wikipedia.org"
+          "fr.vikidia.org"
+          "en.wikipedia.org"
+          "wikimedia.org"
+          "mozilla.org"
+          "nicollet.net"
+          "fr.archive.ubuntu.com"
+          "www.radiofrance.fr"
+          "media.radiofrance-podcast.net"
+          "radiofrance-podcast.net"
+          "rf.proxycast.org"
+          "chess.com"
+          "images.chesscomfiles.com"
+          "sentry.io"
+          "duolingo.com"
+          "www.duolingo.com"
+          "cloudfront.net"
+          "newcastlegateshead.com"
+          "dccdn.net"
+          "wimpykidclub.co.uk"
+          "oxfordenglishtesting.com"
+          "pokepedia.fr"
+          "pokemon.fr"
+          "emojikitchen.dev"
+          "raw.githubusercontent.com"
+          "gstatic.com"
+          "dl.flathub.org"
+          "recaptcha.net"
+          "hcaptcha.com"
+          "challenges.cloudflare.com"
+          "visualstudio.com"
+          "giphy.com"
+          "scp-wiki.com"
+          "scp-wiki.wikidot.com"
+          "scpwiki.github.io"
+          "scp-wiki.wdfiles.com"
+          "cdn.scpwiki.com"
+          "scp-wiki-cdn.nyc3.cdn.digitaloceanspaces.com"
+          "ubuntu.com"
+          "cache.nixos.org"
+          "balena.io"
+          "github.com"
+          "githubusercontent.com"
+          "scratch.mit.edu"
+          "snapcraft.io"
+          "snapcraftcontent.com"
+          "whatsapp.com"
+          "whatsapp.net"
+          "microsoft.com"
+          "login.microsoftonline.com"
+          "msftauth.net"
+          "login.live.com"
+          "account.live.com"
+          "xbox.com"
+          "chunkbase.com"
+          "goodreads.com"
+          "gr-assets.com"
+          "ssl-images-amazon.com"
+          "opfcaptcha-prod.s3.amazonaws.com"
+          "steamloopback.host"
+          "steamstatic.com"
+          "steampowered.com"
+          "steamcommunity.com"
+          "steamgames.com"
+          "steamusercontent.com"
+          "steamcontent.com"
+          "akamaihd.net"
+          "teamwood.itch.io"
+          "static.itch.io"
+          "img.itch.zone"
+          "html-classic.itch.zone"
+          "ssl.hwcdn.net"
+          "neal.fun"
+          "api.teamwood.games"
+          "factorio.com"
+          "doodlegod.com"
+          "geoguessr.com"
+          "maps.googleapis.com"
+        ];
+      in
+      {
+        no-resolv = true;
+        server = map (domain: "/${domain}/${upstream}") allowedDomains;
+      };
+  };
+
+  networking.nameservers = [
+    "127.0.0.1"
+    "::1"
+  ];
+}
