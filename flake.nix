@@ -25,6 +25,18 @@
             services.gnome.gnome-keyring.enable = true;
             security.pam.services.login.enableGnomeKeyring = true;
 
+            services.flatpak.enable = true;
+            systemd.services.flatpak-turbowarp = {
+              wantedBy = [ "multi-user.target" ];
+              after = [ "network-online.target" ];
+              wants = [ "network-online.target" ];
+              path = [ pkgs.flatpak ];
+              script = ''
+                flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+                flatpak install --system -y flathub org.turbowarp.TurboWarp
+              '';
+            };
+
             programs.steam.enable = true;
 
             environment.systemPackages = with pkgs; [
@@ -33,6 +45,13 @@
               iproute2
               nettools
               seahorse
+              (makeDesktopItem {
+                name = "turbowarp";
+                desktopName = "TurboWarp";
+                exec = "flatpak run org.turbowarp.TurboWarp";
+                icon = "org.turbowarp.TurboWarp";
+                categories = [ "Development" "Education" ];
+              })
             ];
 
             services.unbound = {
